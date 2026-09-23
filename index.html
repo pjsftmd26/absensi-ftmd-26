@@ -33,7 +33,7 @@
     display:flex; justify-content:center; padding:48px 20px 64px;
   }
   .sheet{width:100%; max-width:480px;}
-  .masthead{margin-bottom:28px;}
+  .masthead{margin-bottom:28px; text-align:center;}
   .masthead .eyebrow{font-size:13px; color:var(--muted); letter-spacing:.01em; margin:0 0 6px;}
   .masthead h1{font-size:28px; line-height:1.2; margin:0; font-weight:650; letter-spacing:-0.01em;}
   .masthead p{margin:8px 0 0; color:var(--muted); font-size:14.5px; line-height:1.5;}
@@ -41,18 +41,23 @@
   form{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
   fieldset{border:0; margin:0; padding:22px 22px 24px; border-bottom:1px solid var(--line);}
   fieldset:last-of-type{border-bottom:0;}
-  legend{font-size:13.5px; font-weight:650; color:var(--navy-deep); padding:0 0 14px; width:100%;}
+  legend{font-size:13.5px; font-weight:650; color:var(--navy-deep); padding:0 0 8px; margin-top:20px; width:100%; text-align:center;}
 
   label.field{display:block; margin-bottom:16px;}
   label.field:last-child{margin-bottom:0;}
   label.field span{display:block; font-size:13.5px; color:var(--muted); margin-bottom:6px;}
-  input[type="text"], textarea{
+  input[type="text"], textarea, select{
     width:100%; font-size:16px; font-family:inherit; color:var(--ink);
     background:transparent; border:1px solid var(--line); border-radius:7px;
     padding:11px 12px; outline:none; transition:border-color .15s ease;
   }
-  input[type="text"]:focus, textarea:focus{border-color:var(--navy);}
+  input[type="text"]:focus, textarea:focus, select:focus{border-color:var(--navy);}
   textarea{resize:vertical; min-height:76px;}
+  select{appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7080'%3E%3Cpath d='M5.5 7.5l4.5 4.5 4.5-4.5' stroke='%236B7080' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;
+  }
+  select option{background:var(--card); color:var(--ink);}
 
   .toggle{display:flex; gap:10px;}
   .toggle input{position:absolute; opacity:0; pointer-events:none;}
@@ -82,9 +87,16 @@
 
   .config-warning{
     margin-top:22px; font-size:12.5px; color:var(--muted); border-top:1px dashed var(--line);
-    padding-top:14px; line-height:1.6;
+    padding-top:14px; line-height:1.6; text-align:center;
   }
   .config-warning code{background:color-mix(in srgb, var(--ink) 6%, transparent); padding:1px 5px; border-radius:4px;}
+
+  .contacts{margin-top:24px; text-align:center;}
+  .contacts-title{margin:0 0 10px; font-size:13px; color:var(--muted);}
+  .contacts ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;}
+  .contacts li{font-size:14px; display:flex; justify-content:center; gap:8px;}
+  .contacts .name{font-weight:620; color:var(--ink);}
+  .contacts .num{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -108,6 +120,17 @@
       </label>
     </fieldset>
 
+    <fieldset>
+      <legend>Agenda</legend>
+      <label class="field" style="margin:0;">
+        <span>Pilih agenda</span>
+        <select id="agendaSelect" required>
+          <option value="" disabled selected>-- Pilih agenda --</option>
+          <option value="Sparing">Sparing</option>
+        </select>
+      </label>
+    </fieldset>
+
     <div class="actions">
       <button type="submit" id="submitBtn">Kirim absensi</button>
       <div class="status" id="statusMsg"></div>
@@ -116,6 +139,15 @@
 
   <div class="config-warning" id="configWarning">
     Belum tersambung ke spreadsheet: ganti nilai <code>SCRIPT_URL</code> di kode halaman ini dengan URL Web App Apps Script kamu (lihat panduan yang diberikan bersama halaman ini).
+  </div>
+
+  <div class="contacts">
+    <p class="contacts-title">Berhalangan hadir? Hubungi:</p>
+    <ul>
+      <li><span class="name">BIMA</span><span class="num">08216975008</span></li>
+      <li><span class="name">QOFFAN</span><span class="num">081235111198</span></li>
+      <li><span class="name">MONTE</span><span class="num">08131796784</span></li>
+    </ul>
   </div>
 </div>
 
@@ -139,8 +171,9 @@
 
     const nama = document.getElementById('nama').value.trim();
     const nim = document.getElementById('nim').value.trim();
+    const agenda = document.getElementById('agendaSelect').value;
 
-    if (!nama || !nim) {
+    if (!nama || !nim || !agenda) {
       statusMsg.textContent = 'Lengkapi data yang wajib diisi.';
       statusMsg.className = 'status err';
       return;
@@ -159,7 +192,7 @@
       await fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        body: JSON.stringify({ nama, nim, status: 'Hadir' })
+        body: JSON.stringify({ nama, nim, agenda, status: 'Hadir' })
       });
       statusMsg.textContent = 'Absensi terkirim. Terima kasih!';
       statusMsg.className = 'status ok';
