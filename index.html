@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Absensi</title>
+<style>
+  :root{
+    --ink:#1C2233;
+    --paper:#F3F1EA;
+    --card:#FFFFFF;
+    --line:#DDD9CC;
+    --navy:#22315C;
+    --navy-deep:#141D38;
+    --rust:#9C4A2E;
+    --muted:#6B7080;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#ECEAE2; --paper:#14171F; --card:#1D2130; --line:#333748; --navy:#7C8FC9; --navy-deep:#AAB6E0; --rust:#D08260; --muted:#9096A8;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#ECEAE2; --paper:#14171F; --card:#1D2130; --line:#333748; --navy:#7C8FC9; --navy-deep:#AAB6E0; --rust:#D08260; --muted:#9096A8;
+  }
+  html{scroll-padding-top: env(safe-area-inset-top, 0px);}
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100%; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    display:flex; justify-content:center; padding:48px 20px 64px;
+  }
+  .sheet{width:100%; max-width:480px;}
+  .masthead{margin-bottom:28px; text-align:center;}
+  .masthead .eyebrow{font-size:13px; color:var(--muted); letter-spacing:.01em; margin:0 0 6px;}
+  .masthead h1{font-size:28px; line-height:1.2; margin:0; font-weight:650; letter-spacing:-0.01em; text-transform:uppercase;}
+  .masthead p{margin:8px 0 0; color:var(--muted); font-size:14.5px; line-height:1.5; text-transform:capitalize;}
+
+  form{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  fieldset{border:0; margin:0; padding:22px 22px 24px; border-bottom:1px solid var(--line);}
+  fieldset:last-of-type{border-bottom:0;}
+  legend{font-size:13.5px; font-weight:650; color:var(--navy-deep); padding:0 0 8px; margin-top:20px; width:100%; text-align:center;}
+
+  label.field{display:block; margin-bottom:16px;}
+  label.field:last-child{margin-bottom:0;}
+  label.field span{display:block; font-size:13.5px; color:var(--muted); margin-bottom:6px;}
+  input[type="text"], textarea, select{
+    width:100%; font-size:16px; font-family:inherit; color:var(--ink);
+    background:transparent; border:1px solid var(--line); border-radius:7px;
+    padding:11px 12px; outline:none; transition:border-color .15s ease;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus{border-color:var(--navy);}
+  textarea{resize:vertical; min-height:76px;}
+  select{appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7080'%3E%3Cpath d='M5.5 7.5l4.5 4.5 4.5-4.5' stroke='%236B7080' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;
+  }
+  select option{background:var(--card); color:var(--ink);}
+
+  .toggle{display:flex; gap:10px;}
+  .toggle input{position:absolute; opacity:0; pointer-events:none;}
+  .toggle label{
+    flex:1; text-align:center; padding:12px 10px; border:1px solid var(--line); border-radius:7px;
+    font-size:14.5px; font-weight:560; cursor:pointer; color:var(--muted); user-select:none;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .toggle input:checked + label{border-color:var(--navy); color:var(--navy); background:color-mix(in srgb, var(--navy) 8%, transparent);}
+  .toggle input.is-absent:checked + label{border-color:var(--rust); color:var(--rust); background:color-mix(in srgb, var(--rust) 8%, transparent);}
+
+  #alasanWrap{margin-top:16px; display:none;}
+  #alasanWrap.show{display:block;}
+
+  .actions{padding:20px 22px 22px;}
+  button{
+    width:100%; padding:24px; border:0; border-radius:10px; font-size:22px; font-weight:700;
+    letter-spacing:.03em; background:var(--navy); color:#fff; cursor:pointer;
+    transition:opacity .15s ease, transform .05s ease; font-family:inherit;
+  }
+  button:active{transform:scale(0.99);}
+  button:disabled{opacity:.55; cursor:default;}
+
+  .status{margin-top:14px; font-size:14px; text-align:center; min-height:20px;}
+  .status.ok{color:#2E7D4F;}
+  .status.err{color:var(--rust);}
+
+  .config-warning{
+    margin-top:22px; font-size:12.5px; color:var(--muted); border-top:1px dashed var(--line);
+    padding-top:14px; line-height:1.6; text-align:center;
+  }
+  .config-warning code{background:color-mix(in srgb, var(--ink) 6%, transparent); padding:1px 5px; border-radius:4px;}
+
+  .contacts{margin-top:24px; text-align:center;}
+  .contacts-title{margin:0 0 10px; font-size:13px; color:var(--muted); text-transform:capitalize;}
+  .contacts ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;}
+  .contacts li{font-size:14px; display:flex; justify-content:center; gap:8px;}
+  .contacts .name{font-weight:620; color:var(--ink);}
+  .contacts .num{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="masthead">
+    <p class="eyebrow">FTMD · Formulir kehadiran</p>
+    <h1>Absensi</h1>
+  </div>
+
+  <form id="form">
+    <fieldset>
+      <label class="field" style="margin:0;">
+        <span>NIM</span>
+        <input type="text" id="nim" required inputmode="numeric" autocomplete="off">
+      </label>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit" id="submitBtn">HADIR</button>
+      <div class="status" id="statusMsg"></div>
+    </div>
+  </form>
+
+  <div class="config-warning" id="configWarning">
+    Belum tersambung ke spreadsheet: ganti nilai <code>SCRIPT_URL</code> di kode halaman ini dengan URL Web App Apps Script kamu (lihat panduan yang diberikan bersama halaman ini).
+  </div>
+
+  <div class="contacts">
+    <p class="contacts-title">Berhalangan hadir? Hubungi:</p>
+    <ul>
+      <li><span class="name">BIMA</span><span class="num">08216975008</span></li>
+      <li><span class="name">QOFFAN</span><span class="num">081235111198</span></li>
+      <li><span class="name">MONTE</span><span class="num">08131796784</span></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // Ganti dengan URL Web App Apps Script hasil deploy (lihat panduan di bawah).
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHMGVEDmm2aI_DtD9d0xhBw76CFsOwmkF3oaIbZdc1DtNcAFYgNpAIFHOEcY8K1C2b/exec";
+
+  const form = document.getElementById('form');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusMsg = document.getElementById('statusMsg');
+  const configWarning = document.getElementById('configWarning');
+
+  if (SCRIPT_URL && SCRIPT_URL.indexOf('GANTI_DENGAN_URL') === -1) {
+    configWarning.style.display = 'none';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusMsg.textContent = '';
+    statusMsg.className = 'status';
+
+    const nim = document.getElementById('nim').value.trim();
+
+    if (!nim) {
+      statusMsg.textContent = 'Lengkapi data yang wajib diisi.';
+      statusMsg.className = 'status err';
+      return;
+    }
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('GANTI_DENGAN_URL') !== -1) {
+      statusMsg.textContent = 'Halaman belum tersambung ke spreadsheet. Lihat panduan setup.';
+      statusMsg.className = 'status err';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Mengirim...';
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ nim, status: 'Hadir' })
+      });
+      statusMsg.textContent = 'Absensi terkirim. Terima kasih!';
+      statusMsg.className = 'status ok';
+      form.reset();
+    } catch (err) {
+      statusMsg.textContent = 'Gagal mengirim. Periksa koneksi dan coba lagi.';
+      statusMsg.className = 'status err';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'HADIR';
+    }
+  });
+</script>
+</body>
+</html>
